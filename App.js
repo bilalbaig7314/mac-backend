@@ -95,16 +95,22 @@ function RegisterScreen({ navigation }) {
   );
 }
 
-// Home Screen (Unchanged for now, but we'll revisit if needed)
+// Home Screen (Fix fetchUsers to handle invalid user_ids)
 function HomeScreen({ navigation }) {
   const [feed, setFeed] = useState([]);
   const [users, setUsers] = useState({});
 
   const fetchUsers = async (userIds) => {
     try {
-      const userPromises = userIds.map(async (userId) => {
-        const response = await axios.get(`${BASE_URL}/api/users/${userId}`);
-        return { [userId]: response.data.username };
+      const validUserIds = userIds.filter(id => /^[0-9a-fA-F]{24}$/.test(id)); // Filter valid ObjectIds
+      const userPromises = validUserIds.map(async (userId) => {
+        try {
+          const response = await axios.get(`${BASE_URL}/api/users/${userId}`);
+          return { [userId]: response.data.username };
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+          return { [userId]: 'Unknown User' };
+        }
       });
       const userData = await Promise.all(userPromises);
       return Object.assign({}, ...userData);
@@ -128,7 +134,7 @@ function HomeScreen({ navigation }) {
       ];
 
       const userIds = [...new Set(combinedFeed
-        .filter(item => item.user_id)
+        .filter(item => item.user_id && typeof item.user_id === 'string')
         .map(item => item.user_id))];
       const fetchedUsers = await fetchUsers(userIds);
       setUsers(fetchedUsers);
@@ -163,7 +169,7 @@ function HomeScreen({ navigation }) {
                 <>
                   <Text style={styles.feedTitle}>{item.description}</Text>
                   <Text style={styles.feedSubtitle}>Posted by {users[item.user_id] || 'Unknown User'} ({item.privacy})</Text>
-                  {item.url.endsWith('.mp4') ? (
+                  {item.url && item.url.endsWith('.mp4') ? (
                     <Video
                       source={{ uri: `${BASE_URL}${item.url}` }}
                       style={styles.feedImage}
@@ -270,7 +276,7 @@ function EventsScreen({ navigation }) {
   );
 }
 
-// Event Details Screen (Fix user_id)
+// Event Details Screen (Unchanged)
 function EventDetailsScreen({ route }) {
   const { event } = route.params;
   const [description, setDescription] = useState('');
@@ -372,7 +378,7 @@ function EventDetailsScreen({ route }) {
               <View style={styles.feedCard}>
                 <Text style={styles.feedTitle}>{item.description}</Text>
                 <Text style={styles.feedSubtitle}>Privacy: {item.privacy}</Text>
-                {item.url.endsWith('.mp4') ? (
+                {item.url && item.url.endsWith('.mp4') ? (
                   <Video
                     source={{ uri: `${BASE_URL}${item.url}` }}
                     style={styles.feedImage}
@@ -411,7 +417,7 @@ function AlbumDetailsScreen({ route }) {
             <View style={styles.feedCard}>
               <Text style={styles.feedTitle}>{item.description}</Text>
               <Text style={styles.feedSubtitle}>Privacy: {item.privacy}</Text>
-              {item.url.endsWith('.mp4') ? (
+              {item.url && item.url.endsWith('.mp4') ? (
                 <Video
                   source={{ uri: `${BASE_URL}${item.url}` }}
                   style={styles.feedImage}
@@ -434,7 +440,7 @@ function AlbumDetailsScreen({ route }) {
   );
 }
 
-// Media Screen (Fix user_id)
+// Media Screen (Unchanged)
 function MediaScreen({ navigation, route }) {
   const currentUser = route.currentUser || {};
   const [description, setDescription] = useState('');
@@ -608,7 +614,7 @@ function MediaScreen({ navigation, route }) {
   );
 }
 
-// Learning Screen (Fix user_id)
+// Learning Screen (Unchanged)
 function LearningScreen({ route }) {
   const currentUser = route.currentUser || {};
   const [category, setCategory] = useState('tips_and_tricks');
@@ -648,7 +654,7 @@ function LearningScreen({ route }) {
     }
     try {
       const response = await axios.post(`${BASE_URL}/api/tips`, {
-        user_id: currentUser._id || '', // Use currentUser._id instead of hardcoding '1'
+        user_id: currentUser._id || '',
         category,
         content,
       });
@@ -698,7 +704,7 @@ function LearningScreen({ route }) {
   );
 }
 
-// Profile Screen (Fix user_id)
+// Profile Screen (Unchanged)
 function ProfileScreen({ route }) {
   const currentUser = route.params?.currentUser || {};
   const [profilePicture, setProfilePicture] = useState(currentUser.profile_picture || 'https://via.placeholder.com/100.png?text=Profile');
@@ -803,7 +809,7 @@ function ProfileScreen({ route }) {
   );
 }
 
-// Member Directory Screen (Fix user_id)
+// Member Directory Screen (Unchanged)
 function MemberDirectoryScreen() {
   const [users, setUsers] = useState([]);
 
@@ -840,7 +846,7 @@ function MemberDirectoryScreen() {
   );
 }
 
-// Chat Screen (Fix user)
+// Chat Screen (Unchanged)
 function ChatScreen() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);

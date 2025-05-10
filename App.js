@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 // Base URL for Backend (Update with your IP or deployed URL)
-const BASE_URL = 'http://192.168.100.237:5000'; // Replace with your local IP
+const BASE_URL = 'https://mac-backend-ftga.onrender.com'; // Replace with your local IP
 
 // Stack and Tab Navigators
 const Stack = createStackNavigator();

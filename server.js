@@ -1,204 +1,244 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
 const cors = require('cors');
-const path = require('path');
-const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
-
-dotenv.config();
+const multer = require('multer');
+const path = require('path');
+const { cloudinary } = require('cloudinary').v2;
 
 const app = express();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Middleware
 const corsOptions = {
-  origin: ['http://192.168.1.100:19006', 'http://localhost:19006'],
+  origin: ['https://your-frontend.onrender.com', 'http://192.168.1.100:19006', 'http://localhost:19006'],
   methods: ['GET', 'POST', 'PUT'],
   allowedHeaders: ['Content-Type'],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+
+// Serve static files from the uploads directory (optional, can be removed if using Cloudinary)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connected'))
+}).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Multer Storage for File Uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
-});
+// Multer setup for file uploads
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Schemas
+// User Schema
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String,
+  privacy: { type: String, default: 'public' },
   profile_picture: String,
-  privacy: String,
 });
+const User = mongoose.model('User', userSchema);
 
+// Event Schema
 const eventSchema = new mongoose.Schema({
   name: String,
   date: String,
   location: String,
   agenda: String,
 });
+const Event = mongoose.model('Event', eventSchema);
 
+// Media Schema
 const mediaSchema = new mongoose.Schema({
-  user_id: String,
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   description: String,
   url: String,
-  event_id: String,
   privacy: String,
-  albumId: String, // Added albumId field to group media into albums
+  event_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: false },
+  albumId: String,
 });
+const Media = mongoose.model('Media', mediaSchema);
 
-const tipSchema = new mongoose.Schema({
-  user_id: String,
+// Tips Schema
+const tipsSchema = new mongoose.Schema({
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   category: String,
   content: String,
 });
+const Tip = mongoose.model('Tip', tipsSchema);
 
+// Messages Schema
 const messageSchema = new mongoose.Schema({
   user: String,
   text: String,
   timestamp: { type: Date, default: Date.now },
 });
-
-const User = mongoose.model('User', userSchema);
-const Event = mongoose.model('Event', eventSchema);
-const Media = mongoose.model('Media', mediaSchema);
-const Tip = mongoose.model('Tip', tipSchema);
 const Message = mongoose.model('Message', messageSchema);
 
 // Routes
-// User Routes
 app.post('/api/users/register', async (req, res) => {
-  console.log('Register request body:', req.body);
-  const { username, email, password } = req.body;
-  const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-  if (existingUser) {
-    console.log('User already exists:', { username, email });
-    return res.status(400).json({ message: 'Username or email already exists' });
+  try {
+    const { username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword });
+    await user.save();
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error registering user', error });
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashedPassword, privacy: 'public' });
-  await user.save();
-  console.log('User registered:', user);
-  res.status(201).json({ message: 'User registered successfully' });
 });
 
 app.post('/api/users/login', async (req, res) => {
-  console.log('Login request body:', req.body);
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) {
-    console.log('Login failed for:', { username });
-    return res.status(400).json({ message: 'Invalid credentials' });
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(400).json({ message: 'User not found' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    console.log('Login failed for:', { username });
-    return res.status(400).json({ message: 'Invalid credentials' });
-  }
-  console.log('Login successful:', user);
-  res.json({
-    _id: user._id.toString(),
-    username: user.username,
-    email: user.email,
-    profile_picture: user.profile_picture,
-    privacy: user.privacy,
-  });
 });
 
 app.get('/api/users/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json({
-      _id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      profile_picture: user.profile_picture,
-      privacy: user.privacy,
-    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
   } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error fetching user', error });
   }
 });
 
 app.put('/api/users/:id', upload.single('profile_picture'), async (req, res) => {
-  const { privacy } = req.body;
-  const update = { privacy };
-  if (req.file) update.profile_picture = `/uploads/${req.file.filename}`;
-  const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
-  res.json(user);
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'auto' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+      user.profile_picture = result.secure_url;
+    }
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user', error });
+  }
 });
 
-// Event Routes
 app.get('/api/events', async (req, res) => {
-  const events = await Event.find();
-  res.json(events);
+  try {
+    const events = await Event.find();
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching events', error });
+  }
 });
 
 app.post('/api/events', async (req, res) => {
-  const event = new Event(req.body);
-  await event.save();
-  res.status(201).json(event);
+  try {
+    const event = new Event(req.body);
+    await event.save();
+    res.status(201).json(event);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating event', error });
+  }
 });
 
-// Media Routes
 app.get('/api/media', async (req, res) => {
-  const media = await Media.find();
-  res.json(media);
+  try {
+    const media = await Media.find();
+    res.json(media);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching media', error });
+  }
 });
 
 app.post('/api/media', upload.single('media'), async (req, res) => {
-  const { user_id, description, event_id, privacy, albumId } = req.body;
-  const media = new Media({
-    user_id,
-    description,
-    url: `/uploads/${req.file.filename}`,
-    event_id: event_id || null,
-    privacy,
-    albumId, // Save the albumId
-  });
-  await media.save();
-  res.status(201).json(media);
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: 'auto' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    const media = new Media({
+      user_id: req.body.user_id,
+      description: req.body.description,
+      url: result.secure_url,
+      privacy: req.body.privacy,
+      event_id: req.body.event_id || null,
+      albumId: req.body.albumId,
+    });
+    await media.save();
+    res.status(201).json(media);
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading media', error });
+  }
 });
 
-// Tip Routes
 app.get('/api/tips', async (req, res) => {
-  const tips = await Tip.find();
-  res.json(tips);
+  try {
+    const tips = await Tip.find();
+    res.json(tips);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tips', error });
+  }
 });
 
 app.post('/api/tips', async (req, res) => {
-  const tip = new Tip(req.body);
-  await tip.save();
-  res.status(201).json(tip);
+  try {
+    const tip = new Tip(req.body);
+    await tip.save();
+    res.status(201).json(tip);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating tip', error });
+  }
 });
 
-// Chat Routes
 app.get('/api/messages', async (req, res) => {
-  const messages = await Message.find();
-  res.json(messages);
+  try {
+    const messages = await Message.find();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching messages', error });
+  }
 });
 
 app.post('/api/messages', async (req, res) => {
-  const message = new Message(req.body);
-  await message.save();
-  res.status(201).json(message);
+  try {
+    const message = new Message(req.body);
+    await message.save();
+    res.status(201).json(message);
+  } catch (error) {
+    res.status(500).json({ message: 'Error sending message', error });
+  }
 });
 
 // Start Server

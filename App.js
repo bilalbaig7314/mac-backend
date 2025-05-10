@@ -9,14 +9,14 @@ import { Audio, Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
-// Base URL for Backend (Update with your IP or deployed URL)
-const BASE_URL = 'https://mac-backend-ftga.onrender.com'; // Replace with your local IP
+// Base URL for Backend (Updated for Render)
+const BASE_URL = 'https://mac-backend-ftga.onrender.com'; // Replace with your actual Render URL
 
 // Stack and Tab Navigators
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Login Screen
+// Login Screen (Unchanged)
 function LoginScreen({ navigation, setCurrentUser }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -54,7 +54,7 @@ function LoginScreen({ navigation, setCurrentUser }) {
   );
 }
 
-// Registration Screen
+// Registration Screen (Unchanged)
 function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -95,7 +95,7 @@ function RegisterScreen({ navigation }) {
   );
 }
 
-// Home Screen
+// Home Screen (Unchanged for now, but we'll revisit if needed)
 function HomeScreen({ navigation }) {
   const [feed, setFeed] = useState([]);
   const [users, setUsers] = useState({});
@@ -195,7 +195,7 @@ function HomeScreen({ navigation }) {
   );
 }
 
-// Events Screen
+// Events Screen (Unchanged)
 function EventsScreen({ navigation }) {
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -270,7 +270,7 @@ function EventsScreen({ navigation }) {
   );
 }
 
-// Event Details Screen
+// Event Details Screen (Fix user_id)
 function EventDetailsScreen({ route }) {
   const { event } = route.params;
   const [description, setDescription] = useState('');
@@ -321,7 +321,9 @@ function EventDetailsScreen({ route }) {
       type: selectedMedia.type === 'video' ? 'video/mp4' : 'image/jpeg',
       name: selectedMedia.uri.split('/').pop(),
     });
-    formData.append('user_id', '1');
+    // Use currentUser._id instead of hardcoding '1'
+    const currentUser = route.currentUser || {};
+    formData.append('user_id', currentUser._id || '');
     formData.append('description', description);
     formData.append('event_id', event._id);
     formData.append('privacy', privacy);
@@ -336,6 +338,7 @@ function EventDetailsScreen({ route }) {
       setPrivacy('public');
       setSelectedMedia(null);
     } catch (error) {
+      console.error('Media upload error:', error.response?.data || error.message);
       Alert.alert('Error', 'Failed to upload media');
     }
   };
@@ -393,7 +396,7 @@ function EventDetailsScreen({ route }) {
   );
 }
 
-// Album Details Screen
+// Album Details Screen (Unchanged)
 function AlbumDetailsScreen({ route }) {
   const { albumItems } = route.params;
 
@@ -431,7 +434,7 @@ function AlbumDetailsScreen({ route }) {
   );
 }
 
-// Media Screen
+// Media Screen (Fix user_id)
 function MediaScreen({ navigation, route }) {
   const currentUser = route.currentUser || {};
   const [description, setDescription] = useState('');
@@ -499,7 +502,8 @@ function MediaScreen({ navigation, route }) {
         type: mediaItem.type === 'video' ? 'video/mp4' : 'image/jpeg',
         name: mediaItem.uri.split('/').pop(),
       });
-      formData.append('user_id', currentUser._id || '1');
+      // Use currentUser._id instead of hardcoding '1'
+      formData.append('user_id', currentUser._id || '');
       formData.append('description', description);
       formData.append('privacy', privacy);
       formData.append('albumId', albumId);
@@ -510,7 +514,7 @@ function MediaScreen({ navigation, route }) {
         });
         return { ...response.data, albumId };
       } catch (error) {
-        console.error('Upload error for item:', mediaItem.uri, error);
+        console.error('Upload error for item:', mediaItem.uri, error.response?.data || error.message);
         return null;
       }
     });
@@ -604,7 +608,7 @@ function MediaScreen({ navigation, route }) {
   );
 }
 
-// Learning Screen
+// Learning Screen (Fix user_id)
 function LearningScreen({ route }) {
   const currentUser = route.currentUser || {};
   const [category, setCategory] = useState('tips_and_tricks');
@@ -644,18 +648,19 @@ function LearningScreen({ route }) {
     }
     try {
       const response = await axios.post(`${BASE_URL}/api/tips`, {
-        user_id: currentUser._id || '1',
+        user_id: currentUser._id || '', // Use currentUser._id instead of hardcoding '1'
         category,
         content,
       });
       setTips([...tips, response.data]);
       setUsers(prevUsers => ({
         ...prevUsers,
-        [currentUser._id || '1']: currentUser.username || 'Unknown User',
+        [currentUser._id || '']: currentUser.username || 'Unknown User',
       }));
       Alert.alert('Success', 'Tip added successfully!');
       setContent('');
     } catch (error) {
+      console.error('Error adding tip:', error.response?.data || error.message);
       Alert.alert('Error', 'Failed to add tip');
     }
   };
@@ -693,7 +698,7 @@ function LearningScreen({ route }) {
   );
 }
 
-// Profile Screen
+// Profile Screen (Fix user_id)
 function ProfileScreen({ route }) {
   const currentUser = route.params?.currentUser || {};
   const [profilePicture, setProfilePicture] = useState(currentUser.profile_picture || 'https://via.placeholder.com/100.png?text=Profile');
@@ -714,7 +719,7 @@ function ProfileScreen({ route }) {
         }
         setProfilePicture(user.profile_picture || 'https://via.placeholder.com/100.png?text=Profile');
       } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('Error fetching user:', error.response?.data || error.message);
       }
     };
     fetchUser();
@@ -798,7 +803,7 @@ function ProfileScreen({ route }) {
   );
 }
 
-// Member Directory Screen
+// Member Directory Screen (Fix user_id)
 function MemberDirectoryScreen() {
   const [users, setUsers] = useState([]);
 
@@ -806,12 +811,12 @@ function MemberDirectoryScreen() {
     const fetchUsers = async () => {
       try {
         const response = await axios.post(`${BASE_URL}/api/users/login`, {
-          username: 'JohnDoe',
-          password: 'password123'
+          username: 'BilalBaig', // Update to a valid username in your database
+          password: 'Pakistan1947' // Update to the correct password
         });
         setUsers([response.data]);
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching users:', error.response?.data || error.message);
       }
     };
     fetchUsers();
@@ -835,7 +840,7 @@ function MemberDirectoryScreen() {
   );
 }
 
-// Chat Screen
+// Chat Screen (Fix user)
 function ChatScreen() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -846,7 +851,7 @@ function ChatScreen() {
         const response = await axios.get(`${BASE_URL}/api/messages`);
         setMessages(response.data);
       } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching messages:', error.response?.data || error.message);
       }
     };
     fetchMessages();
@@ -856,12 +861,13 @@ function ChatScreen() {
     if (!message) return;
     try {
       const response = await axios.post(`${BASE_URL}/api/messages`, {
-        user: 'JohnDoe',
+        user: 'BilalBaig', // Update to the logged-in user's username
         text: message
       });
       setMessages([...messages, response.data]);
       setMessage('');
     } catch (error) {
+      console.error('Error sending message:', error.response?.data || error.message);
       Alert.alert('Error', 'Failed to send message');
     }
   };
@@ -889,7 +895,7 @@ function ChatScreen() {
   );
 }
 
-// Main Tab Navigator
+// Main Tab Navigator (Ensure currentUser is passed correctly)
 function MainTabs({ route }) {
   const currentUser = route.params?.currentUser || {};
 
@@ -931,7 +937,7 @@ function MainTabs({ route }) {
   );
 }
 
-// Main App
+// Main App (Unchanged)
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 

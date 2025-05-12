@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 // Base URL for Backend (Updated for Render)
-const BASE_URL = 'https://mac-backend-ftga.onrender.com'; // Replace with your actual Render URL
+const BASE_URL = 'https://mac-backend-ftga.onrender.com';
 
 // Stack and Tab Navigators
 const Stack = createStackNavigator();
@@ -96,13 +96,14 @@ function RegisterScreen({ navigation }) {
 }
 
 // Home Screen (Fix fetchUsers to handle invalid user_ids)
-function HomeScreen({ navigation }) {
+function HomeScreen({ navigation, route }) {
+  const currentUser = route.params?.currentUser || {};
   const [feed, setFeed] = useState([]);
   const [users, setUsers] = useState({});
 
   const fetchUsers = async (userIds) => {
     try {
-      const validUserIds = userIds.filter(id => /^[0-9a-fA-F]{24}$/.test(id)); // Filter valid ObjectIds
+      const validUserIds = userIds.filter(id => /^[0-9a-fA-F]{24}$/.test(id));
       const userPromises = validUserIds.map(async (userId) => {
         try {
           const response = await axios.get(`${BASE_URL}/api/users/${userId}`);
@@ -162,7 +163,7 @@ function HomeScreen({ navigation }) {
                 <>
                   <Text style={styles.feedTitle}>{item.name}</Text>
                   <Text style={styles.feedSubtitle}>Event on {item.date} by {item.user}</Text>
-                  <Button title="View Details" onPress={() => navigation.navigate('EventDetails', { event: item })} color="#4CAF50" />
+                  <Button title="View Details" onPress={() => navigation.navigate('EventDetails', { event: item, currentUser })} color="#4CAF50" />
                 </>
               )}
               {item.type === 'media' && (
@@ -171,7 +172,7 @@ function HomeScreen({ navigation }) {
                   <Text style={styles.feedSubtitle}>Posted by {users[item.user_id] || 'Unknown User'} ({item.privacy})</Text>
                   {item.url && item.url.endsWith('.mp4') ? (
                     <Video
-                      source={{ uri: `${BASE_URL}${item.url}` }}
+                      source={{ uri: item.url }}
                       style={styles.feedImage}
                       useNativeControls
                       resizeMode="contain"
@@ -179,7 +180,7 @@ function HomeScreen({ navigation }) {
                     />
                   ) : (
                     <Image
-                      source={{ uri: `${BASE_URL}${item.url}` }}
+                      source={{ uri: item.url }}
                       style={styles.feedImage}
                       onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
                     />
@@ -201,8 +202,9 @@ function HomeScreen({ navigation }) {
   );
 }
 
-// Events Screen (Unchanged)
-function EventsScreen({ navigation }) {
+// Events Screen
+function EventsScreen({ navigation, route }) {
+  const currentUser = route.currentUser || {};
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventLocation, setEventLocation] = useState('');
@@ -264,7 +266,7 @@ function EventsScreen({ navigation }) {
             data={events}
             keyExtractor={item => item._id.toString()}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.eventCard} onPress={() => navigation.navigate('EventDetails', { event: item })}>
+              <TouchableOpacity style={styles.eventCard} onPress={() => navigation.navigate('EventDetails', { event: item, currentUser })}>
                 <Text style={styles.eventName}>{item.name}</Text>
                 <Text style={styles.eventDate}>{item.date}</Text>
               </TouchableOpacity>
@@ -276,9 +278,9 @@ function EventsScreen({ navigation }) {
   );
 }
 
-// Event Details Screen (Unchanged)
+// Event Details Screen
 function EventDetailsScreen({ route }) {
-  const { event } = route.params;
+  const { event, currentUser } = route.params;
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState('public');
   const [media, setMedia] = useState([]);
@@ -327,8 +329,6 @@ function EventDetailsScreen({ route }) {
       type: selectedMedia.type === 'video' ? 'video/mp4' : 'image/jpeg',
       name: selectedMedia.uri.split('/').pop(),
     });
-    // Use currentUser._id instead of hardcoding '1'
-    const currentUser = route.currentUser || {};
     formData.append('user_id', currentUser._id || '');
     formData.append('description', description);
     formData.append('event_id', event._id);
@@ -380,7 +380,7 @@ function EventDetailsScreen({ route }) {
                 <Text style={styles.feedSubtitle}>Privacy: {item.privacy}</Text>
                 {item.url && item.url.endsWith('.mp4') ? (
                   <Video
-                    source={{ uri: `${BASE_URL}${item.url}` }}
+                    source={{ uri: item.url }}
                     style={styles.feedImage}
                     useNativeControls
                     resizeMode="contain"
@@ -388,7 +388,7 @@ function EventDetailsScreen({ route }) {
                   />
                 ) : (
                   <Image
-                    source={{ uri: `${BASE_URL}${item.url}` }}
+                    source={{ uri: item.url }}
                     style={styles.feedImage}
                     onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
                   />
@@ -402,7 +402,7 @@ function EventDetailsScreen({ route }) {
   );
 }
 
-// Album Details Screen (Unchanged)
+// Album Details Screen
 function AlbumDetailsScreen({ route }) {
   const { albumItems } = route.params;
 
@@ -419,7 +419,7 @@ function AlbumDetailsScreen({ route }) {
               <Text style={styles.feedSubtitle}>Privacy: {item.privacy}</Text>
               {item.url && item.url.endsWith('.mp4') ? (
                 <Video
-                  source={{ uri: `${BASE_URL}${item.url}` }}
+                  source={{ uri: item.url }}
                   style={styles.feedImage}
                   useNativeControls
                   resizeMode="contain"
@@ -427,7 +427,7 @@ function AlbumDetailsScreen({ route }) {
                 />
               ) : (
                 <Image
-                  source={{ uri: `${BASE_URL}${item.url}` }}
+                  source={{ uri: item.url }}
                   style={styles.feedImage}
                   onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
                 />
@@ -440,7 +440,7 @@ function AlbumDetailsScreen({ route }) {
   );
 }
 
-// Media Screen (Unchanged)
+// Media Screen
 function MediaScreen({ navigation, route }) {
   const currentUser = route.currentUser || {};
   const [description, setDescription] = useState('');
@@ -500,7 +500,7 @@ function MediaScreen({ navigation, route }) {
       return;
     }
 
-    const albumId = `${description}-${Date.now()}`; // Unique identifier for this album
+    const albumId = `${description}-${Date.now()}`;
     const uploadPromises = selectedMedia.map(async (mediaItem) => {
       const formData = new FormData();
       formData.append('media', {
@@ -508,7 +508,6 @@ function MediaScreen({ navigation, route }) {
         type: mediaItem.type === 'video' ? 'video/mp4' : 'image/jpeg',
         name: mediaItem.uri.split('/').pop(),
       });
-      // Use currentUser._id instead of hardcoding '1'
       formData.append('user_id', currentUser._id || '');
       formData.append('description', description);
       formData.append('privacy', privacy);
@@ -590,7 +589,7 @@ function MediaScreen({ navigation, route }) {
                   {item.thumbnail && (
                     item.thumbnail.endsWith('.mp4') ? (
                       <Video
-                        source={{ uri: `${BASE_URL}${item.thumbnail}` }}
+                        source={{ uri: item.thumbnail }}
                         style={styles.feedImage}
                         useNativeControls
                         resizeMode="contain"
@@ -598,7 +597,7 @@ function MediaScreen({ navigation, route }) {
                       />
                     ) : (
                       <Image
-                        source={{ uri: `${BASE_URL}${item.thumbnail}` }}
+                        source={{ uri: item.thumbnail }}
                         style={styles.feedImage}
                         onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
                       />
@@ -614,7 +613,7 @@ function MediaScreen({ navigation, route }) {
   );
 }
 
-// Learning Screen (Unchanged)
+// Learning Screen
 function LearningScreen({ route }) {
   const currentUser = route.currentUser || {};
   const [category, setCategory] = useState('tips_and_tricks');
@@ -704,7 +703,7 @@ function LearningScreen({ route }) {
   );
 }
 
-// Profile Screen (Unchanged)
+// Profile Screen
 function ProfileScreen({ route }) {
   const currentUser = route.params?.currentUser || {};
   const [profilePicture, setProfilePicture] = useState(currentUser.profile_picture || 'https://via.placeholder.com/100.png?text=Profile');
@@ -773,7 +772,7 @@ function ProfileScreen({ route }) {
       const response = await axios.put(`${BASE_URL}/api/users/${currentUser._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setProfilePicture(`${BASE_URL}${response.data.profile_picture}`);
+      setProfilePicture(response.data.profile_picture);
       Alert.alert('Success', 'Profile picture updated successfully!');
       setSelectedImage(null);
     } catch (error) {
@@ -809,7 +808,7 @@ function ProfileScreen({ route }) {
   );
 }
 
-// Member Directory Screen (Unchanged)
+// Member Directory Screen
 function MemberDirectoryScreen() {
   const [users, setUsers] = useState([]);
 
@@ -817,8 +816,8 @@ function MemberDirectoryScreen() {
     const fetchUsers = async () => {
       try {
         const response = await axios.post(`${BASE_URL}/api/users/login`, {
-          username: 'BilalBaig', // Update to a valid username in your database
-          password: 'Pakistan1947' // Update to the correct password
+          username: 'BilalBaig',
+          password: 'Pakistan1947'
         });
         setUsers([response.data]);
       } catch (error) {
@@ -846,7 +845,7 @@ function MemberDirectoryScreen() {
   );
 }
 
-// Chat Screen (Unchanged)
+// Chat Screen
 function ChatScreen() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -867,7 +866,7 @@ function ChatScreen() {
     if (!message) return;
     try {
       const response = await axios.post(`${BASE_URL}/api/messages`, {
-        user: 'BilalBaig', // Update to the logged-in user's username
+        user: 'BilalBaig',
         text: message
       });
       setMessages([...messages, response.data]);
@@ -901,7 +900,7 @@ function ChatScreen() {
   );
 }
 
-// Main Tab Navigator (Ensure currentUser is passed correctly)
+// Main Tab Navigator
 function MainTabs({ route }) {
   const currentUser = route.params?.currentUser || {};
 
@@ -928,8 +927,12 @@ function MainTabs({ route }) {
         }
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Events" component={EventsScreen} options={{ tabBarLabel: 'Events' }} />
+      <Tab.Screen name="Home">
+        {props => <HomeScreen {...props} currentUser={currentUser} />}
+      </Tab.Screen>
+      <Tab.Screen name="Events">
+        {props => <EventsScreen {...props} currentUser={currentUser} />}
+      </Tab.Screen>
       <Tab.Screen name="Media">
         {props => <MediaScreen {...props} currentUser={currentUser} />}
       </Tab.Screen>
@@ -943,7 +946,7 @@ function MainTabs({ route }) {
   );
 }
 
-// Main App (Unchanged)
+// Main App
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 

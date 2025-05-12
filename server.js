@@ -2,21 +2,28 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
-const path = require('path');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
 dotenv.config();
 
 const app = express();
 const corsOptions = {
-  origin: ['http://192.168.1.100:19006', 'http://localhost:19006'],
+  origin: ['http://192.168.1.100:19006', 'http://localhost:19006', 'https://mac-backend-ftga.onrender.com'],
   methods: ['GET', 'POST', 'PUT'],
   allowedHeaders: ['Content-Type'],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -26,10 +33,13 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Multer Storage for File Uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+// Multer Storage for Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'mac-app',
+    resource_type: 'auto', // Automatically detect file type (image, video, etc.)
+  },
 });
 const upload = multer({ storage });
 
@@ -55,7 +65,7 @@ const mediaSchema = new mongoose.Schema({
   url: String,
   event_id: String,
   privacy: String,
-  albumId: String, // Added albumId field to group media into albums
+  albumId: String,
 });
 
 const tipSchema = new mongoose.Schema({
@@ -138,11 +148,27 @@ app.get('/api/users/:id', async (req, res) => {
 });
 
 app.put('/api/users/:id', upload.single('profile_picture'), async (req, res) => {
-  const { privacy } = req.body;
-  const update = { privacy };
-  if (req.file) update.profile_picture = `/uploads/${req.file.filename}`;
-  const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
-  res.json(user);
+  try {
+    const { privacy } = req.body;
+    const update = { privacy };
+    if (req.file) {
+      update.profile_picture = req.file.path; // Cloudinary URL
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+      _id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      profile_picture: user.profile_picture,
+      privacy: user.privacy,
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Event Routes
@@ -164,17 +190,25 @@ app.get('/api/media', async (req, res) => {
 });
 
 app.post('/api/media', upload.single('media'), async (req, res) => {
-  const { user_id, description, event_id, privacy, albumId } = req.body;
-  const media = new Media({
-    user_id,
-    description,
-    url: `/uploads/${req.file.filename}`,
-    event_id: event_id || null,
-    privacy,
-    albumId, // Save the albumId
-  });
-  await media.save();
-  res.status(201).json(media);
+  try {
+    const { user_id, description, event_id, privacy, albumId } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const media = new Media({
+      user_id,
+      description,
+      url: req.file.path, // Cloudinary URL
+      event_id: event_id || null,
+      privacy,
+      albumId,
+    });
+    await media.save();
+    res.status(201).json(media);
+  } catch (error) {
+    console.error('Error uploading media:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Tip Routes

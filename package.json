@@ -10,7 +10,7 @@
     "@expo/vector-icons": "^14.1.0",
     "axios": "^0.21.1",
     "bcryptjs": "^3.0.2",
-    "cloudinary": "^2.6.1",
+    "cloudinary": "^1.32.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",  
     "expo-av": "^15.1.4",

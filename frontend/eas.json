@@ -15,10 +15,11 @@
     "production": {
       "android":{
         "buildType": "app-bundle",
+         "withoutCredentials": true,
         "npm": {
           "packageManager": "npm"
         }
-        "withoutCredentials": true
+       
       }
     }
   },

@@ -2,11 +2,17 @@ diff --git a/node_modules/expo-modules-core/android/build.gradle b/node_modules/
 index 1234567..abcdefg 100644
 --- a/node_modules/expo-modules-core/android/build.gradle
 +++ b/node_modules/expo-modules-core/android/build.gradle
-@@ -369,7 +369,9 @@ afterEvaluate {
-    // Example: Fix null check for path replacement
-    def somePath = projectDir?.toString()
--    somePath = somePath.replace('\\', '/')
-+    if (somePath != null) {
-+        somePath = somePath.replace('\\', '/')
-+    }
-}
+@@ -65,7 +65,7 @@ def REACT_NATIVE_SO_DIR = REACT_NATIVE_BUILD_FROM_SOURCE
+  ? Paths.get(findProject(":packages:react-native:ReactAndroid").getProjectDir().toString(), "build", "intermediates", "library_*", "*", "jni")
+  : "${buildDir}/react/jni"
+ 
+-def reactProperties = new Properties()
+-file("$REACT_NATIVE_DIR/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+-
+-def BOOST_VERSION = reactProperties.getProperty("VERSION_NAME")
++def reactProperties = new Properties()
++file("$REACT_NATIVE_DIR/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
++
++def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION") ?: "1.76.0" // Fallback to a known version
+ def REACT_NATIVE_VERSION = System.getenv("REACT_NATIVE_OVERRIDE_VERSION") ?: reactProperties.getProperty("VERSION_NAME")
+ def REACT_NATIVE_TARGET_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()

@@ -16,3 +16,15 @@ index 1234567..abcdefg 100644
 +def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION") ?: "1.76.0" // Fallback to a known version
  def REACT_NATIVE_VERSION = System.getenv("REACT_NATIVE_OVERRIDE_VERSION") ?: reactProperties.getProperty("VERSION_NAME")
  def REACT_NATIVE_TARGET_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+ 
+@@ -368,7 +368,9 @@ def prepareBoost = tasks.register('prepareBoost', Copy) {
+   includeEmptyDirs = false
+   into("$thirdPartyNdkDir/boost")
+   doLast {
+-    new File("$thirdPartyNdkDir/boost/boost").renameTo("$thirdPartyNdkDir/boost/boost_${BOOST_VERSION}")
++    def boostDir = new File("$thirdPartyNdkDir/boost/boost")
++    if (boostDir.exists() && BOOST_VERSION != null) {
++      boostDir.renameTo(new File("$thirdPartyNdkDir/boost/boost_${BOOST_VERSION}"))
++    }
+   }
+ }

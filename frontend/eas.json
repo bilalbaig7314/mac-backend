@@ -6,7 +6,10 @@
   "build": {
     "preview": {
       "android": {
-      "buildType": "apk"
+      "buildType": "apk",
+      "env": {
+          "ANDROID_COMPILE_SDK_VERSION": "33"
+        }
       }
     },
     "preview": {
@@ -15,7 +18,14 @@
     "production": {
       "android":{
         "buildType": "app-bundle",
-         "withoutCredentials": true
+         "withoutCredentials": true,
+         "npm": {
+          "packageManager": "npm"
+        },
+        "image": "default",
+        "env": {
+          "ANDROID_COMPILE_SDK_VERSION": "33"
+        }
          
        
       }

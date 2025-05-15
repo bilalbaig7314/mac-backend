@@ -7,7 +7,6 @@
     "preview": {
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease -Pandroid.compileSdkVersion=33"
       }
     },
     "production": {
@@ -15,7 +14,6 @@
         "buildType": "app-bundle",
         "withoutCredentials": true,
         "image": "default",
-        "gradleCommand": ":app:bundleRelease -Pandroid.compileSdkVersion=33"
       }
     }
   },

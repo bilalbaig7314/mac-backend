@@ -4,10 +4,10 @@
   "main": "App.js",
   "scripts": {
     "start": "expo start",
-    "postinstall": "patch-package",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
+    
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -19,9 +19,6 @@
       "android":{
         "buildType": "app-bundle",
          "withoutCredentials": true,
-         "npm": {
-          "packageManager": "npm"
-        },
         "image": "default",
         "env": {
           "ANDROID_COMPILE_SDK_VERSION": "33"

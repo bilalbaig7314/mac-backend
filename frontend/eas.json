@@ -6,25 +6,16 @@
   "build": {
     "preview": {
       "android": {
-      "buildType": "apk",
-      "env": {
-          "ANDROID_COMPILE_SDK_VERSION": "33"
-        }
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease -Pandroid.compileSdkVersion=33"
       }
     },
-    "preview": {
-      "distribution": "internal"
-    },
     "production": {
-      "android":{
+      "android": {
         "buildType": "app-bundle",
-         "withoutCredentials": true,
+        "withoutCredentials": true,
         "image": "default",
-        "env": {
-          "ANDROID_COMPILE_SDK_VERSION": "33"
-        }
-         
-       
+        "gradleCommand": ":app:bundleRelease -Pandroid.compileSdkVersion=33"
       }
     }
   },

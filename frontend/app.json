@@ -3,6 +3,7 @@
     "name": "mac",
     "slug": "snack-e3e6fe1e-ce58-43ad-89c0-a636cafb4ac2",
     "version": "1.0.0",
+    "sdkVersion": "50.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

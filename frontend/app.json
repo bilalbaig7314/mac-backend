@@ -11,11 +11,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "compileSdkVersion": 33,
+      "minSdkVersion": 21,
+      "targetSdkVersion": 33,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -29,6 +34,9 @@
       "eas": {
         "projectId": "67c71363-9a1a-4f92-a0e2-04b898398562"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

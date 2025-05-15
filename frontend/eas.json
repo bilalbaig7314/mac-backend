@@ -15,10 +15,8 @@
     "production": {
       "android":{
         "buildType": "app-bundle",
-         "withoutCredentials": true,
-         "gradleProps": {
-          "android.compileSdkVersion": 33 
-        }
+         "withoutCredentials": true
+         
        
       }
     }

@@ -16,8 +16,8 @@
       "android":{
         "buildType": "app-bundle",
          "withoutCredentials": true,
-        "npm": {
-          "packageManager": "npm"
+         "gradleProps": {
+          "android.compileSdkVersion": 33 
         }
        
       }

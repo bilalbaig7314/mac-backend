@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 16.4.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "android": {
+      "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "android":{
+        "buildType": "app-bundle",
+        "npm": {
+          "packageManager": "npm"
+        }
+        "withoutCredentials": true
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

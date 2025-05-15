@@ -27,8 +27,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "patch-package": "^8.0.0",
-    "postinstall-postinstall": "^2.1.0"
   },
   "private": true
 }

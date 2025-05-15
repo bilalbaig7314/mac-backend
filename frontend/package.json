@@ -4,26 +4,31 @@
   "main": "App.js",
   "scripts": {
     "start": "expo start",
+    "postinstall": "patch-package",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/stack": "^6.3.29",
     "axios": "^0.21.1",
     "expo": "~50.0.0",
     "expo-av": "~13.10.6",
+    "expo-font": "~11.10.3",
     "expo-image-picker": "~14.7.1",
     "expo-linear-gradient": "~12.7.2",
+    "expo-modules-core": "~1.5.11",
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
-    "react-native": "0.73.6",
-    "@react-navigation/bottom-tabs": "^6.5.20",
-    "@react-navigation/native": "^6.1.17",
-    "@react-navigation/stack": "^6.3.29"
+    "react-native": "0.73.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   },
   "private": true
 }

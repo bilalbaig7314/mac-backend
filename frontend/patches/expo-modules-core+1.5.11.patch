@@ -1,0 +1,12 @@
+diff --git a/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle b/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+index 1234567..abcdefg 100644
+--- a/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
++++ b/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+@@ -73,7 +73,7 @@ project.afterEvaluate {
+       // Configure the release variant if it exists
+       if (components.hasProperty('release')) {
+-        components.release.outputFileName = "expo-modules-core-release.aar"
++        // components.release.outputFileName = "expo-modules-core-release.aar"
+       }
+   }
+ }

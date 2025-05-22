@@ -1,0 +1,58 @@
+diff --git a/node_modules/expo-modules-core/android/build.gradle b/node_modules/expo-modules-core/android/build.gradle
+index 1234567..abcdefg 100644
+--- a/node_modules/expo-modules-core/android/build.gradle
++++ b/node_modules/expo-modules-core/android/build.gradle
+@@ -1,4 +1,3 @@
+ import java.nio.file.Paths
+-import org.gradle.api.file.RelativePath
+ apply plugin: 'com.android.library'
+ apply plugin: 'kotlin-android'
+ apply plugin: 'maven-publish'
+@@ -339,9 +338,7 @@ task unzipHermes(dependsOn: downloadHermes, type: Copy) {
+    into(hermesDir)
+  }
+ 
+-def downloadBoost = tasks.create('downloadBoost', Download) {
++/*def downloadBoost = tasks.create('downloadBoost', Download) {
+   dependsOn(createNativeDepsDirectories)
+   def srcUrl = REACT_NATIVE_TARGET_VERSION >= 69
+     ? "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION.replace("_", ".")}/source/boost_${BOOST_VERSION}.tar.gz"
+     : "https://github.com/react-native-community/boost-for-react-native/releases/download/v${BOOST_VERSION.replace("_", ".")}-0/boost_${BOOST_VERSION}.tar.gz"
+   src(srcUrl)
+   onlyIfNewer(true)
+   overwrite(false)
+   dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
+-}
++}*/
+
+-def prepareBoost = tasks.register('prepareBoost', Copy) {
++/*def prepareBoost = tasks.register('prepareBoost', Copy) {
+   dependsOn(downloadBoost)
+   from(tarTree(resources.gzip(downloadBoost.dest)))
+   from("$reactNativeThirdParty/boost/Android.mk")
+@@ -374,7 +376,7 @@ def prepareBoost = tasks.register('prepareBoost', Copy) {
+   includeEmptyDirs = false
+   into("$thirdPartyNdkDir/boost")
+   doLast {
+     def boostDir = new File("$thirdPartyNdkDir/boost/boost")
+     def targetDir = BOOST_VERSION ? new File("$thirdPartyNdkDir/boost/boost_${BOOST_VERSION}") : new File("$thirdPartyNdkDir/boost/boost_default")
+     if (boostDir.exists()) boostDir.renameTo(targetDir)
+   }
+-}
++}*/
+
+ void nativeBuildDependsOn(project, dependsOnTask, buildTypesIncludes) {
+   def buildTasks = project.tasks.findAll { task ->
+@@ -389,9 +391,9 @@ afterEvaluate {
+   }
+ }
+
+-if (REACT_NATIVE_TARGET_VERSION < 71) {
+-  nativeBuildDependsOn(project, prepareBoost, null)
+-}
++/*if (REACT_NATIVE_TARGET_VERSION < 71) {
++  nativeBuildDependsOn(project, prepareBoost, null)
++}*/
+ if (USE_HERMES) {
+   nativeBuildDependsOn(project, prepareHermes, null)
+   if (hasHermesProject && !prebuiltHermesCacheHit) {
